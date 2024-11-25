@@ -1,0 +1,133 @@
+@startuml pkg
+package "app" {
+    folder "aa_domain" {
+        folder "model"{
+            interface "BaseModel" as iBaseModel #Moccasin
+            [base_model.py] as baseMod #Moccasin
+            baseMod -up- iBaseModel
+            interface "Post" as iPostMod #Moccasin
+            [post.py] as postMod #Moccasin
+            postMod -up- iPostMod
+            postMod --> iBaseModel
+            interface "PostTag" as iPostTagMod #Moccasin
+            [post_tag.py] as postTagMod #Moccasin
+            note bottom of postTagMod : модель таблицы \nсвязи "пост-тэг"
+            postTagMod -up- iPostTagMod
+            postTagMod --> iBaseModel
+            interface "Tag" as iTagMod #Moccasin
+            [tag.py] as tagMod #Moccasin
+            tagMod -up- iTagMod
+            tagMod --> iBaseModel
+            interface "user" as iUserMod #Moccasin
+            [user.py] as userMod #Moccasin
+            note bottom of userMod : модель таблицы \n"пользователь"
+            userMod -up- iUserMod
+            userMod --> iBaseModel
+        }
+        folder "schema"{
+            interface "SignIn" as iSignInSch #Khaki
+            interface "SignUp" as iSignUpSch #Khaki
+            interface "SignIn" as iPayloadSch #Khaki
+            interface "SignIn" as iSignInResponseSch #Khaki
+            [auth\n_schema] as authSchema #Khaki
+            authSchema -up- iSignInSch
+            authSchema -up- iSignUpSch
+            authSchema -up- iPayloadSch
+            authSchema -up- iSignInResponseSch
+            interface "Model\nBaseInfo" as iModelBaseInfo #Khaki
+            interface "FindBase" as iFindBaseSch #Khaki
+            interface "Blank" as iBlank #Khaki
+            interface "SearchOptions" as iSearchOptionsSch #Khaki
+            [base\n_schema.py] as baseSchema #Khaki
+            note left of baseSchema : базовая модель \npydantic
+            baseSchema -up- iModelBaseInfo
+            baseSchema -up- iFindBaseSch
+            baseSchema -up- iBlank
+            baseSchema -up- iSearchOptionsSch
+            [post\n_tag_schema] as postTagSchema #Khaki
+            postTagSchema --> iFindBaseSch
+            postTagSchema --> iModelBaseInfo
+            postTagSchema --> iSearchOptionsSch
+            interface "user" as iUserSch #Khaki
+            interface "FindUser" as iFindUserSch #Khaki
+            interface "FindUserResult" as iFindUserResultSch #Khaki
+            interface "UpsertUser" as iUpsertUserSch#Khaki
+            [user\n_schema.py] as userSchema #Khaki
+            note left of userSchema : модель пользователя \npydantic
+            userSchema -up- iUserSch
+            userSchema -up- iFindUserSch
+            userSchema -up- iFindUserResultSch
+            userSchema -up- iUpsertUserSch
+            userSchema --> iModelBaseInfo
+            authSchema --> iUserSch
+        }
+    }
+    package "bb_services" {
+        [auth\n-service.py] as authServ #LightPink
+        interface "Base\nService" as iBaseServ #LightPink
+        [base\n_service.py] as baseServ #LightPink
+        baseServ -up- iBaseServ
+        [post\n_service.py] as postServ #LightPink
+        [tag\n_service.py] as tagServ #LightPink
+        interface "UserService" as iUserServ #LightPink
+        [user\n_service.py] as userServ #LightPink
+        userServ -up- iUserServ
+        userServ --> iBaseServ
+     }
+    folder "cc_adapters" {
+        package "repositories" {
+            interface "User\nRepositiry" as iUserRep #PaleGreen
+            userServ --> iUserRep
+            interface "Base\nRepository" as iBaseRep #PaleGreen
+            [base\n_repository] as baseRep #PaleGreen
+            baseRep -up- iBaseRep
+            [user\n_repository] as userRep #PaleGreen
+            userRep -up- iUserRep
+            userRep --> iBaseRep
+            userRep --> iUserMod
+        } 
+        folder "api"{
+            folder "endpoints"{
+                interface "router" as iAuthRouter #GreenYellow
+                interface "router" as iPostRouter #GreenYellow
+                interface "router" as iTagRouter #GreenYellow
+                interface "router" as iUserRouter #GreenYellow
+                [auth.py] as epAuth #GreenYellow
+                epAuth -up- iAuthRouter
+                [post.py] as epPost #GreenYellow
+                epPost -up- iPostRouter
+                [tag.py] as epTag #GreenYellow
+                epTag -up- iTagRouter
+                [user.py] as epUser #GreenYellow
+                epUser -up- iUserRouter
+                epUser --> iUserSch
+                epUser --> iFindUserSch
+                epUser --> iFindUserResultSch
+                epUser --> iUpsertUserSch
+                epUser --> iBlank
+                epUser --> iUserServ
+            }
+            interface "routers" as iRouters
+            [routes] as routes
+            routes --> iAuthRouter
+            routes --> iPostRouter
+            routes --> iTagRouter
+            routes --> iUserRouter
+            iRouters - routes
+        }
+    }
+    folder "dd_system"{
+        folder "core"{
+
+        }
+        folder "util" {
+            interface "AllOptional" as iAllOptional
+            [schema] as schemaUtil
+            schemaUtil -left- iAllOptional
+            userSchema --> iAllOptional
+        }
+    }
+    component "__init.py__" as init
+    [main]
+}
+@enduml
